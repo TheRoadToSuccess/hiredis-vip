@@ -104,7 +104,7 @@ redisClusterContext *redisClusterConnect(const char *addrs, int flags);
 redisClusterContext *redisClusterConnectWithTimeout(const char *addrs, 
     const struct timeval tv, int flags);
 redisClusterContext *redisClusterConnectNonBlock(const char *addrs, int flags);
-
+redisClusterContext *redisClusterConnectNonBlockWithTimeout(const char *addrs, const struct timeval tv, int flags);
 redisClusterContext *redisClusterContextInit(void);
 void redisClusterFree(redisClusterContext *cc);
 
@@ -176,6 +176,7 @@ typedef struct redisClusterAsyncContext {
 } redisClusterAsyncContext;
 
 redisClusterAsyncContext *redisClusterAsyncConnect(const char *addrs, int flags);
+redisClusterAsyncContext *redisClusterAsyncConnectWithTimeout(const char *addrs,const struct timeval tv, int flags);
 int redisClusterAsyncSetConnectCallback(redisClusterAsyncContext *acc, redisConnectCallback *fn);
 int redisClusterAsyncSetDisconnectCallback(redisClusterAsyncContext *acc, redisDisconnectCallback *fn);
 int redisClusterAsyncFormattedCommand(redisClusterAsyncContext *acc, redisClusterCallbackFn *fn, void *privdata, char *cmd, int len);

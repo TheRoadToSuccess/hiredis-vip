@@ -2180,7 +2180,33 @@ redisClusterContext *redisClusterConnectNonBlock(const char *addrs, int flags) {
     
     return _redisClusterConnect(cc, addrs);
 }
+redisClusterContext *redisClusterConnectNonBlockWithTimeout(
+    const char *addrs, const struct timeval tv, int flags)
+{
+    redisClusterContext *cc;
 
+    cc = redisClusterContextInit();
+
+    if(cc == NULL)
+    {
+        return NULL;
+    }
+
+    cc->flags &= ~REDIS_BLOCK;
+    if(flags)
+    {
+        cc->flags |= flags;
+    }
+
+    if (cc->connect_timeout == NULL)
+    {
+        cc->connect_timeout = malloc(sizeof(struct timeval));
+    }
+
+    memcpy(cc->connect_timeout, &tv, sizeof(struct timeval));
+
+    return _redisClusterConnect(cc, addrs);
+}
 int redisClusterSetOptionAddNode(redisClusterContext *cc, const char *addr)
 {
     dictEntry *node_entry;
@@ -4443,6 +4469,28 @@ redisClusterAsyncContext *redisClusterAsyncConnect(const char *addrs, int flags)
     return acc;
 }
 
+redisClusterAsyncContext *redisClusterAsyncConnectWithTimeout(const char *addrs,
+    const struct timeval tv, int flags)
+{
+    redisClusterContext *cc;
+    redisClusterAsyncContext *acc;
+    cc = redisClusterConnectNonBlockWithTimeout(addrs,tv, flags);
+    if(cc == NULL)
+    {
+        return NULL;
+    }
+
+    acc = redisClusterAsyncInitialize(cc);
+    if (acc == NULL) {
+        redisClusterFree(cc);
+        return NULL;
+    }
+
+    __redisClusterAsyncCopyError(acc);
+
+    return acc;
+}
+
 
 int redisClusterAsyncSetConnectCallback(
     redisClusterAsyncContext *acc, redisConnectCallback *fn) 
@@ -4943,6 +4991,10 @@ void redisClusterAsyncDisconnect(redisClusterAsyncContext *acc) {
         redisAsyncDisconnect(ac);
 
         node->acon = NULL;
+    }
+    if (di!=NULL)
+    {
+        free(di);
     }
 }
 
